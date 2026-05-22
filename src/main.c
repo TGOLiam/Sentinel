@@ -9,11 +9,16 @@ void task(void) {
 }
 
 int main(void) {
-	int threads = sysconf(_SC_NPROCESSORS_ONLN);
-   	thread_pool_t* pool = thread_pool_new(cores, 10);
+	int cores = sysconf(_SC_NPROCESSORS_ONLN);
+   	thread_pool_t* pool = thread_pool_new(cores, 100);
 
-	thread_pool_submit(
+	for (int i = 0; i < 100; i++)
+		thread_pool_submit(pool, &task);
 
+	sleep(5);	
+
+	thread_pool_shutdown(pool);
+	thread_pool_free(pool);
 	return 0;
 }
 

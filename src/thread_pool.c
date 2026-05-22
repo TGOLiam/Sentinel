@@ -3,14 +3,6 @@
 #include "thread_pool.h"
 
 
-typedef struct {
-    task_queue_t    *tq;
-    pthread_mutex_t  m;
-    pthread_cond_t   cv;
-    int              shutdown;
-    pthread_t       *tid;
-    int              thread_count;
-} thread_pool_t;
 
 static void *thread_pool_worker(void *arg) {
     thread_pool_t *pool = (thread_pool_t *)arg;
