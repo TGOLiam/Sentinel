@@ -1,18 +1,25 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -g -I./include
-TARGET  = lb
+BUILD_DIR = build
+TARGET  = $(BUILD_DIR)/lb
 SRCS    = $(wildcard src/*.c)
-OBJS    = $(SRCS:.c=.o)
+OBJS    = $(patsubst src/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 
 .PHONY: all clean
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $^
 
-%.o: %.c
+$(BUILD_DIR)/%.o: src/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -rf $(BUILD_DIR)
+
+run:
+	./$(TARGET)

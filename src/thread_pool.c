@@ -18,10 +18,10 @@ static void *thread_pool_worker(void *arg) {
             break;
         }
 
-        task_t fn = task_queue_dequeue(pool->tq);
+        task_t task = task_queue_dequeue(pool->tq);
         pthread_mutex_unlock(&pool->m);
 
-        if (fn) fn();
+        if (task.fn) task.fn(task.args);
     }
 
     return NULL;
@@ -67,13 +67,17 @@ void thread_pool_shutdown(thread_pool_t *pool) {
 
     for (int i = 0; i < pool->thread_count; i++)
         pthread_join(pool->tid[i], NULL);
-}
-
-void thread_pool_free(thread_pool_t *pool) {
-    if (!pool) return;
+    
     task_queue_free(pool->tq);
     pthread_mutex_destroy(&pool->m);
     pthread_cond_destroy(&pool->cv);
     free(pool->tid);
     free(pool);
+
+}
+
+void thread_pool_join(thread_pool_t* pool) {
+    for (int i = 0; i < pool->thread_count; i++){
+	pthread_join(pool->tid[i], NULL);
+    }
 }

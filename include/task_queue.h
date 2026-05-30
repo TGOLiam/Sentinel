@@ -3,6 +3,13 @@
 
 #include "common.h"
 
+typedef void (*task_fn_t)(void*);
+
+typedef struct {
+    task_fn_t fn;
+    void*     args;
+} task_t;
+
 typedef struct {
     task_t *tl;
     int     head;

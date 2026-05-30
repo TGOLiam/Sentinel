@@ -16,6 +16,6 @@ typedef struct {
 thread_pool_t *thread_pool_new(int thread_count, int queue_capacity);
 int            thread_pool_submit(thread_pool_t *pool, task_t t);
 void           thread_pool_shutdown(thread_pool_t *pool);
-void           thread_pool_free(thread_pool_t *pool);
+void	       thread_pool_join(thread_pool_t* pool);
 
 #endif

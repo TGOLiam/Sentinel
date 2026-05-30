@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-
-typedef void (*task_t)(void);
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
 
 #endif

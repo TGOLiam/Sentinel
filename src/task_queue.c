@@ -30,7 +30,7 @@ int task_queue_enqueue(task_queue_t *self, task_t t) {
 
 task_t task_queue_dequeue(task_queue_t *self) {
     if (!self || self->count == 0)
-        return NULL;
+        return (task_t){0};
 
     task_t t   = self->tl[self->head];
     self->head = (self->head + 1) % self->capacity;
