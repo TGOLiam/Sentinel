@@ -16,7 +16,7 @@ typedef struct {
 	const char* ip;
 } connection_t;
 
-listener_t listener_new();
+listener_t listener_new(int port);
 connection_t* listener_accept(listener_t* listener);
 
 #endif

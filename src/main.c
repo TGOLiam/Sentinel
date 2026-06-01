@@ -35,17 +35,17 @@ int main(void) {
 	int cores = sysconf(_SC_NPROCESSORS_ONLN) - 1;
    	thread_pool_t* pool = thread_pool_new(cores, CONNECTIONS_REQ_MAX);
 
-	listener_t listener = listener_new();
+	listener_t listener = listener_new(8000);
 
 	while(1){
 		connection_t* conn = listener_accept(&listener);
 
-		task_t conn_handler = {
+		task_t connection_handler_t = {
 			.fn = connection_handler,
 			.args = conn
 		};
 
-		thread_pool_submit(pool, conn_handler);
+		thread_pool_submit(pool, connection_handler_t);
 		//usleep(100000);
 	}
 
