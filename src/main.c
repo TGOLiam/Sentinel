@@ -8,7 +8,6 @@
 void connection_handler(void* args) {
     connection_t* conn = (connection_t*) args;
 
-	
 	int fd = conn->fd;
 	char buffer[1024];
 	ssize_t bytes_read = recv(fd, buffer, sizeof(buffer) - 1, 0);
@@ -28,7 +27,6 @@ void connection_handler(void* args) {
 	snprintf(response, sizeof(response), "Echo: %s", buffer);
 	send(fd, response, strlen(response), 0);
 
-
 	close(fd);
 	free(conn);
 }
@@ -42,12 +40,12 @@ int main(void) {
 	while(1){
 		connection_t* conn = listener_accept(&listener);
 
-		task_t task = {
+		task_t conn_handler = {
 			.fn = connection_handler,
 			.args = conn
 		};
 
-		thread_pool_submit(pool, task);
+		thread_pool_submit(pool, conn_handler);
 		//usleep(100000);
 	}
 
