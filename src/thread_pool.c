@@ -2,11 +2,6 @@
 #include "task_queue.h"
 #include "thread_pool.h"
 
-// TODO: Introduce a backlog queue for pending tasks when the main task queue is full, 
-// and have workers pull from it when idle. 
-// This would allow us to handle bursts of incoming connections 
-// without rejecting them outright.
-
 static void *thread_pool_worker(void *arg) {
     thread_pool_t *pool = (thread_pool_t *)arg;
 
@@ -32,12 +27,28 @@ static void *thread_pool_worker(void *arg) {
 
 thread_pool_t *thread_pool_new(int thread_count, int queue_capacity) {
     thread_pool_t *pool = malloc(sizeof(thread_pool_t));
-    if (!pool) return NULL;
+    if (!pool) {
+        fprintf(stderr, "Failed to allocate thread pool\n");
+        return NULL;
+    }
 
     pool->tq           = task_queue_new(queue_capacity);
+    if (!pool->tq) {
+        fprintf(stderr, "Failed to create task queue\n");
+        free(pool);
+        return NULL;
+    }
+
     pool->shutdown     = 0;
     pool->thread_count = thread_count;
+    
     pool->tid          = malloc(thread_count * sizeof(pthread_t));
+    if (!pool->tid) {
+        fprintf(stderr, "Failed to allocate thread IDs\n");
+        task_queue_free(pool->tq);
+        free(pool);
+        return NULL;
+    }
 
     pthread_mutex_init(&pool->m, NULL);
     pthread_cond_init(&pool->cv, NULL);
@@ -51,12 +62,25 @@ thread_pool_t *thread_pool_new(int thread_count, int queue_capacity) {
 int thread_pool_submit(thread_pool_t *pool, task_t t) {
     pthread_mutex_lock(&pool->m);
 
-    if (pool->shutdown) {
+    if (pool->shutdown || task_queue_is_full(pool->tq)) {
         pthread_mutex_unlock(&pool->m);
+        fprintf(stderr, "Failed to submit task: pool is shutting down.\n");
+        return -1;
+    }
+
+    if (task_queue_is_full(pool->tq)) {
+        pthread_mutex_unlock(&pool->m);
+        fprintf(stderr, "Failed to submit task: task queue is full.\n");
         return -1;
     }
 
     int ret = task_queue_enqueue(pool->tq, t);
+    if (ret < 0) {
+        pthread_mutex_unlock(&pool->m);
+        fprintf(stderr, "Failed to submit task: task queue is full.\n");
+        return -1;
+    }
+
     pthread_cond_signal(&pool->cv);
     pthread_mutex_unlock(&pool->m);
     return ret;
@@ -81,7 +105,7 @@ void thread_pool_shutdown(thread_pool_t *pool) {
 
 void thread_pool_join(thread_pool_t* pool) {
     for (int i = 0; i < pool->thread_count; i++){
-	pthread_join(pool->tid[i], NULL);
+	    pthread_join(pool->tid[i], NULL);
     }
 }
 

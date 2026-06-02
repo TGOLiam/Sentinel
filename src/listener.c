@@ -12,8 +12,9 @@ listener_t listener_new(int port) {
     server_addr.sin_addr.s_addr = INADDR_ANY;
     
     int bind_result = bind(socket_fd,(struct sockaddr*)&server_addr, sizeof(server_addr));
+    
 
-     int listen_result = listen(socket_fd, CONNECTIONS_REQ_MAX);
+    int listen_result = listen(socket_fd, CONNECTIONS_REQ_MAX);
 
     socklen_t addr_len = sizeof(server_addr);
 
@@ -34,6 +35,7 @@ connection_t* listener_accept(listener_t* listener) {
 
     connection_t* conn = malloc(sizeof(connection_t));
     if (!conn) {
+        fprintf(stderr, "Failed to allocate connection\n");
         close(fd);
         return NULL;
     }
@@ -48,3 +50,8 @@ void listener_close(listener_t* listener) {
     close(listener->socket_fd);
 }
 
+void connection_close(connection_t* conn) {
+    if (!conn || conn->fd < 0) return;
+    close(conn->fd);
+    free(conn);
+}

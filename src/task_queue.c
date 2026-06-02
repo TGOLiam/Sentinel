@@ -7,6 +7,7 @@ task_queue_t *task_queue_new(int capacity) {
 
     tq->tl = malloc(capacity * sizeof(task_t));
     if (!tq->tl) {
+        fprintf(stderr, "Failed to allocate task queue\n");
         free(tq);
         return NULL;
     }
@@ -19,8 +20,14 @@ task_queue_t *task_queue_new(int capacity) {
 }
 
 int task_queue_enqueue(task_queue_t *self, task_t t) {
-    if (!self || self->count == self->capacity)
+    if (!self || !t.fn) {
+        fprintf(stderr, "Invalid task or task queue\n");
         return -1;
+    }
+    if (self->count == self->capacity) {
+        fprintf(stderr, "Task queue is full. Cannot enqueue task.\n");
+        return -1;
+    }
 
     self->tl[self->tail] = t;
     self->tail           = (self->tail + 1) % self->capacity;
@@ -42,4 +49,8 @@ void task_queue_free(task_queue_t *self) {
     if (!self) return;
     free(self->tl);
     free(self);
+}
+
+int task_queue_is_full(task_queue_t *self) {
+    return self && self->count == self->capacity;
 }

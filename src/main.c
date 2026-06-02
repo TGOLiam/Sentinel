@@ -24,33 +24,47 @@ void connection_handler(void* args) {
 
 	printf("[thread %lu] received from %s:%d: %s\n", tid, ipbuf, conn->fd, buffer);
 
-	// Simulate Encryption work  
-	for (volatile int i = 0; i < 100000000; i++);
+	// Simulate some work by sleeping for a short time
+	//usleep(100000); // Sleep for 100ms
 
 	char response[1024];
 	snprintf(response, sizeof(response), "Echo: %s", buffer);
 	send(fd, response, strlen(response), 0);
 
-	close(fd);
-	free(conn);
+	connection_close(conn);
 }
 
 int main(void) {
 	int cores = sysconf(_SC_NPROCESSORS_ONLN) - 1;
-   	thread_pool_t* pool = thread_pool_new(cores, CONNECTIONS_REQ_MAX);
+	if (cores < 1) cores = 1;
 
+	thread_pool_t* pool = thread_pool_new(cores, CONNECTIONS_REQ_MAX);
+	if (!pool) {
+		fprintf(stderr, "thread_pool_new failed\n");
+		return 1;
+	}
+	
 	listener_t listener = listener_new(8000);
 
-	//while(1){
-	for (int i = 0; i < 10; i++) {
+	while(1){
+	//for (int i = 0; i < 10; i++) {
 		connection_t* conn = listener_accept(&listener);
+		if (!conn) {
+			fprintf(stderr, "Failed to accept connections.\n");
+			continue;
+		}
 
 		task_t connection_handler_task = {
 			.fn = connection_handler,
 			.args = conn
 		};
 
-		thread_pool_submit(pool, connection_handler_task);
+		if (thread_pool_submit(pool, connection_handler_task) < 0) {
+			// send a http 503 response to the client 
+			// before closing the connection
+			// reply503()
+			connection_close(conn);
+		}
 	}
 
 	thread_pool_shutdown(pool);
