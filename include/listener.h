@@ -1,5 +1,5 @@
-#ifndef SOCKET_H
-#define SOCKET_H
+#ifndef LISTENER_H
+#define LISTENER_H
 
 #define CONNECTIONS_REQ_MAX 100
 
