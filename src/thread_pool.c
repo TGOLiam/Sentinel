@@ -2,7 +2,10 @@
 #include "task_queue.h"
 #include "thread_pool.h"
 
-
+// TODO: Introduce a backlog queue for pending tasks when the main task queue is full, 
+// and have workers pull from it when idle. 
+// This would allow us to handle bursts of incoming connections 
+// without rejecting them outright.
 
 static void *thread_pool_worker(void *arg) {
     thread_pool_t *pool = (thread_pool_t *)arg;
@@ -81,3 +84,4 @@ void thread_pool_join(thread_pool_t* pool) {
 	pthread_join(pool->tid[i], NULL);
     }
 }
+

@@ -7,6 +7,11 @@ set -uo pipefail
 
 PORT=${1:-8000}
 ITERS=${2:-}
+# third positional arg or env var NO_DELAY can disable delays. Accepts: 1, nodelay, no-delay
+NO_DELAY=${3:-${NO_DELAY:-0}}
+if [ "$NO_DELAY" = "nodelay" ] || [ "$NO_DELAY" = "no-delay" ]; then
+  NO_DELAY=1
+fi
 
 count=0
 while true; do
@@ -34,8 +39,10 @@ while true; do
     fi
   fi
 
-  # random delay between 100ms and 200ms
-  ms=$((RANDOM % 101 + 100))
-  sleep_time=$(awk -v ms="$ms" 'BEGIN{printf "%.3f", ms/1000}')
-  sleep "$sleep_time"
+  # random delay between 100ms and 200ms (skip if NO_DELAY=1)
+  if [ "${NO_DELAY:-0}" != "1" ]; then
+    ms=$((RANDOM % 101 + 100))
+    sleep_time=$(awk -v ms="$ms" 'BEGIN{printf "%.3f", ms/1000}')
+    sleep "$sleep_time"
+  fi
 done

@@ -13,10 +13,10 @@ typedef struct {
 
 typedef struct {
 	int fd;
-	const char* ip;
+	struct in_addr ip;
 } connection_t;
 
 listener_t listener_new(int port);
 connection_t* listener_accept(listener_t* listener);
-
+void listener_close(listener_t* listener);
 #endif

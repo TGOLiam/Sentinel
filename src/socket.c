@@ -32,26 +32,19 @@ connection_t* listener_accept(listener_t* listener) {
                     &addr_len);
     if (fd < 0) return NULL;
 
-    char ipbuf[INET_ADDRSTRLEN];
-    if (!inet_ntop(AF_INET, &client_addr.sin_addr, ipbuf, sizeof(ipbuf))) {
-        close(fd);
-        return NULL;
-    }
-
-    connection_t *conn = malloc(sizeof(*conn));
+    connection_t* conn = malloc(sizeof(connection_t));
     if (!conn) {
         close(fd);
         return NULL;
     }
 
     conn->fd = fd;
-    conn->ip = strdup(ipbuf); // store a const char* pointer to owned memory
-    if (!conn->ip) {
-        close(fd);
-        free(conn);
-        return NULL;
-    }
-
+    conn->ip = client_addr.sin_addr;
     return conn;
+}
+
+void listener_close(listener_t* listener) {
+    if (!listener || listener->socket_fd < 0) return;
+    close(listener->socket_fd);
 }
 

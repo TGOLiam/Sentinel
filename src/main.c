@@ -18,7 +18,11 @@ void connection_handler(void* args) {
 
 	buffer[bytes_read] = '\0';
 	pthread_t tid = pthread_self();
-	printf("[thread %lu] received from %s:%d: %s\n", tid, conn->ip, conn->fd, buffer);
+
+	char ipbuf[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &conn->ip, ipbuf, sizeof(ipbuf));
+
+	printf("[thread %lu] received from %s:%d: %s\n", tid, ipbuf, conn->fd, buffer);
 
 	// Simulate Encryption work  
 	for (volatile int i = 0; i < 100000000; i++);
@@ -37,19 +41,22 @@ int main(void) {
 
 	listener_t listener = listener_new(8000);
 
-	while(1){
+	//while(1){
+	for (int i = 0; i < 10; i++) {
 		connection_t* conn = listener_accept(&listener);
 
-		task_t connection_handler_t = {
+		task_t connection_handler_task = {
 			.fn = connection_handler,
 			.args = conn
 		};
 
-		thread_pool_submit(pool, connection_handler_t);
-		//usleep(100000);
+		thread_pool_submit(pool, connection_handler_task);
 	}
 
 	thread_pool_shutdown(pool);
+
+	listener_close(&listener);
+
 	return 0;
 }
 
