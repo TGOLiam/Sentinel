@@ -9,5 +9,6 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <sys/epoll.h>
 
 #endif

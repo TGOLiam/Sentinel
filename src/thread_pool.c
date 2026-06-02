@@ -62,7 +62,7 @@ thread_pool_t *thread_pool_new(int thread_count, int queue_capacity) {
 int thread_pool_submit(thread_pool_t *pool, task_t t) {
     pthread_mutex_lock(&pool->m);
 
-    if (pool->shutdown || task_queue_is_full(pool->tq)) {
+    if (pool->shutdown) {
         pthread_mutex_unlock(&pool->m);
         fprintf(stderr, "Failed to submit task: pool is shutting down.\n");
         return -1;

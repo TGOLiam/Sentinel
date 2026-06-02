@@ -2,6 +2,7 @@
 #define LISTENER_H
 
 #define CONNECTIONS_REQ_MAX 100
+#define MAX_EVENTS 1000
 
 
 #define PORT 1424
