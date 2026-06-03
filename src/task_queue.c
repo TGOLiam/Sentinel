@@ -1,5 +1,7 @@
 #include "task_queue.h"
+
 #include <stdlib.h>
+#include <stdio.h>
 
 task_queue_t *task_queue_new(int capacity) {
     task_queue_t *tq = malloc(sizeof(task_queue_t));

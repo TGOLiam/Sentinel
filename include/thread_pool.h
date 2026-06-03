@@ -1,8 +1,11 @@
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 
-#include "common.h"
 #include "task_queue.h"
+
+#include <pthread.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 typedef struct {
     task_queue_t    *tq;

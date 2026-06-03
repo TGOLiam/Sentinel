@@ -10,7 +10,6 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-
 #define PORT 1424
 typedef struct {
     int socket_fd;

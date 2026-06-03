@@ -1,4 +1,3 @@
-
 #include "task_queue.h"
 #include "thread_pool.h"
 #include "listener.h"
@@ -25,7 +24,6 @@ int main(void) {
 		return 1;
 	}
 
-
 	int epfd = epoll_create1(0);
 	if (epfd < 0) {
 		fprintf(stderr, "Failed to create epoll instance\n");
@@ -33,8 +31,6 @@ int main(void) {
 		listener_close(&listener);
 		return 1;
 	}
-
-
 
 	struct epoll_event ev= {.events = EPOLLIN, .data.ptr = &listener};
 	epoll_ctl(epfd, EPOLL_CTL_ADD, listener.socket_fd, &ev);

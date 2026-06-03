@@ -1,8 +1,6 @@
 #ifndef TASK_QUEUE_H
 #define TASK_QUEUE_H
 
-#include "common.h"
-
 typedef void (*task_fn_t)(void*);
 
 typedef struct {
