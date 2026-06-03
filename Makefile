@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS  = -Wall -Wextra -g -I./include
+CFLAGS  = -Wall -Wextra -g -std=c11 -I./include
 BUILD_DIR = build
 TARGET  = $(BUILD_DIR)/lb
 SRCS    = $(wildcard src/*.c)
