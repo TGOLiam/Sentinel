@@ -56,3 +56,7 @@ void task_queue_free(task_queue_t *self) {
 int task_queue_is_full(task_queue_t *self) {
     return self && self->count == self->capacity;
 }
+
+int task_queue_is_empty(task_queue_t *self) {
+    return self && self->count == 0;
+}

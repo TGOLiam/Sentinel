@@ -52,6 +52,7 @@ int main(void) {
 			// new connection
 			if (events[i].data.ptr == &listener) {
 				connection_t* conn = listener_accept(&listener);
+				printf("Accepted connection from %s\n", inet_ntoa(conn->ip));
 				if (!conn) {
 					fprintf(stderr, "Failed to accept connections.\n");
 					continue;
@@ -80,6 +81,7 @@ int main(void) {
 					// reply503()
 					connection_close(conn);
 				}
+				printf("Submitted connection from %s to thread pool\n", inet_ntoa(conn->ip));
 			}
 
 		}
