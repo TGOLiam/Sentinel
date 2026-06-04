@@ -1,8 +1,8 @@
 #ifndef LISTENER_H
 #define LISTENER_H
 
-#define CONNECTIONS_REQ_MAX 100
-#define MAX_EVENTS 1000
+#define CONNECTIONS_REQ_MAX 100000
+#define MAX_EVENTS 100000
 
 #include <sys/types.h>
 #include <sys/socket.h>

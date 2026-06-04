@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS  = -Wall -Wextra -g -std=c11 -I./include
+CFLAGS  = -Wall -Wextra -g -std=c11 -I./include 
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj
 TARGET  = $(BUILD_DIR)/lb
