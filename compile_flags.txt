@@ -1,5 +1,0 @@
--std=c11
--I./include
--Wall
--Wextra
--g

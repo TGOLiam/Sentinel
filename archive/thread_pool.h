@@ -2,6 +2,7 @@
 #define THREAD_POOL_H
 
 #include "task_queue.h"
+#include "listener.h"
 
 #include <pthread.h>
 #include <stdlib.h>
@@ -13,9 +14,12 @@ typedef struct thread_pool_t thread_pool_t;
 typedef struct {
     thread_pool_t *pool;
     int            thread_id;
+
     task_queue_t   *local_tq;
     pthread_mutex_t local_m;
     pthread_cond_t local_cv;
+
+    int            epfd;
 } thread_worker_t;
 
 typedef struct thread_pool_t {

@@ -6,33 +6,27 @@ static void *thread_pool_worker(void *arg) {
     thread_pool_t *pool = worker->pool;
     task_queue_t *local_tq = worker->local_tq;
 
+    while(1){
+        task_t t = {0};
 
-    // Dequeues from own local task queue first, then global task queue if local is empty
-    while (1) {
-        task_t task = {0};
-
-        // Check local queue first
         pthread_mutex_lock(&worker->local_m);
-        if (!task_queue_is_empty(local_tq)) {
-            task = task_queue_dequeue(local_tq);
+        if(!task_queue_is_empty(local_tq)){
+            t = task_queue_dequeue(local_tq); 
             pthread_mutex_unlock(&worker->local_m);
-            if (task.fn) task.fn(task.args);
+            if (t.fn) t.fn(t.args, worker);
             continue;
         }
         pthread_mutex_unlock(&worker->local_m);
-        
-        // Local queue is empty, check global queue
+
         pthread_mutex_lock(&pool->global_m);
         if(!task_queue_is_empty(pool->global_tq)){
-            task = task_queue_dequeue(pool->global_tq);
-            pthread_cond_signal(&pool->global_cv); // Signal any waiting submitters that space is available
+            t = task_queue_dequeue(pool->global_tq);
             pthread_mutex_unlock(&pool->global_m);
-            if (task.fn) task.fn(task.args);
+            if (t.fn) t.fn(t.args, worker);
             continue;
         }
         pthread_mutex_unlock(&pool->global_m);
-        
-        // Sleep if no tasks are available and check for shutdown signal
+
         pthread_mutex_lock(&worker->local_m);
         while (task_queue_is_empty(local_tq) && !pool->shutdown) {
             pthread_cond_wait(&worker->local_cv, &worker->local_m);
@@ -42,15 +36,26 @@ static void *thread_pool_worker(void *arg) {
             pthread_mutex_unlock(&worker->local_m);
             break;
         }
-        pthread_mutex_unlock(&worker->local_m);
     }
-    return NULL;
+}
+
+int thread_pool_submit(thread_pool_t *pool, task_t t) {
+
+    // Choose a worker thread to submit the task to (round-robin or random)
+
+
+    return 0;
 }
 
 void thread_pool_worker_cleanup(thread_worker_t *worker) {
     task_queue_free(worker->local_tq);
     pthread_mutex_destroy(&worker->local_m);
     pthread_cond_destroy(&worker->local_cv);
+
+    if (worker->epfd >= 0) {
+        close(worker->epfd);
+    }
+
     free(worker);
 }
 
@@ -83,6 +88,8 @@ thread_pool_t *thread_pool_new(int thread_count, int queue_capacity) {
         pthread_mutex_init(&worker->local_m, NULL);
         pthread_cond_init(&worker->local_cv, NULL);
 
+        worker->epfd = -1; // Initialize epfd to an invalid value, can be set later if needed
+
         // Stores the worker in the pool's worker array
         pool->worker_tid[i] = worker;
 
@@ -97,53 +104,6 @@ thread_pool_t *thread_pool_new(int thread_count, int queue_capacity) {
     return pool;
 }
 
-// Sequential worker strategy (unbalanced):
-// Fills worker 0's queue first, then 1, then 2, etc.
-// This keeps early threads busy and avoids waking idle threads, saving scheduler overhead.
-int thread_pool_submit(thread_pool_t *pool, task_t t) {
-    // Try workers sequentially (0, 1, 2, ...) to favor keeping early threads busy
-    // This naturally fills queues in order, reducing scheduler wake-ups
-    int is_submitted = 0;
-
-    for (int i = 0; i < pool->thread_count; i++) {
-        thread_worker_t *target = pool->worker_tid[i];
-        
-        pthread_mutex_lock(&target->local_m);
-        if (task_queue_is_full(target->local_tq)) {
-            pthread_mutex_unlock(&target->local_m);
-            continue; // Try next worker
-        }
-        else {
-            task_queue_enqueue(target->local_tq, t);
-            pthread_cond_signal(&target->local_cv); // Wake up the worker if it's waiting
-            
-            pthread_mutex_unlock(&target->local_m);
-            is_submitted = 1;
-            break; // Task submitted successfully
-        }
-    }
-    
-    if (!is_submitted) {
-        // All local queues are full, fallback to global queue
-        pthread_mutex_lock(&pool->global_m);
-        
-        while(task_queue_is_full(pool->global_tq) && !pool->shutdown) {
-            pthread_cond_wait(&pool->global_cv, &pool->global_m);
-        }
-
-        if (pool->shutdown) {
-            pthread_mutex_unlock(&pool->global_m);
-            return -1; // Failed to submit task due to shutdown
-        }
-
-        task_queue_enqueue(pool->global_tq, t);
-        pthread_cond_signal(&pool->global_cv); // Wake up a worker waiting on the global queue
-        pthread_mutex_unlock(&pool->global_m);
-    }
-
-    
-    return 0;
-}
 
 
 void thread_pool_shutdown(thread_pool_t *pool) {

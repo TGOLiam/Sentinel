@@ -1,8 +1,8 @@
-#include "listener.h"
+#include "worker_pool.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <pthread.h>
 
 
 listener_t listener_new(int port) {
@@ -39,20 +39,24 @@ connection_t* listener_accept(listener_t* listener) {
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
 
-    int fd = accept(listener->socket_fd,
+    int incoming_fd = accept(listener->socket_fd,
                     (struct sockaddr*)&client_addr,
                     &addr_len);
-    if (fd < 0) return NULL;
+    if (incoming_fd < 0) return NULL;
 
     connection_t* conn = malloc(sizeof(connection_t));
     if (!conn) {
         fprintf(stderr, "Failed to allocate connection\n");
-        close(fd);
+        close(incoming_fd);
         return NULL;
     }
 
-    conn->fd = fd;
     conn->ip = client_addr.sin_addr;
+    conn->client_fd = incoming_fd;
+    conn->upstream_fd = -1;
+    conn->state = STATE_READ_REQUEST;
+    conn->buffer_len = 0;
+
     return conn;
 }
 
@@ -62,19 +66,23 @@ void listener_close(listener_t* listener) {
 }
 
 void connection_close(connection_t* conn) {
-    if (!conn || conn->fd < 0) return;
-    close(conn->fd);
+    if (!conn || conn->client_fd < 0) return;
+    close(conn->client_fd);
+    close(conn->upstream_fd);
     free(conn);
 }
 
-void connection_handler(void* args) {
-    connection_t* conn = (connection_t*) args;
-	int fd = conn->fd;
+void connection_handler(connection_t *conn, worker_t *worker) {
+	int fd = conn->client_fd;
 
 	char buffer[1024];
 	ssize_t bytes_read = recv(fd, buffer, sizeof(buffer) - 1, 0);
-	if (bytes_read < 0) {
-		perror("recv");
+	if (bytes_read <= 0) {
+		if (bytes_read == 0)
+			printf("[thread %lu] connection closed\n", pthread_self());
+		else
+			perror("recv");
+		connection_close(conn);
 		return;
 	}
 
@@ -82,21 +90,23 @@ void connection_handler(void* args) {
 	pthread_t tid = pthread_self();
 
 	char ipbuf[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &conn->ip, ipbuf, sizeof(ipbuf));
+	inet_ntop(AF_INET, &conn->ip, ipbuf, sizeof(ipbuf));
 
-	// Remove trailing newline
 	size_t len = strlen(buffer);
 	if (len > 0 && buffer[len-1] == '\n') {
 		buffer[len-1] = '\0';
 	}
-	printf("[thread %lu] received from %s:%d: %s\n", tid, ipbuf, conn->fd, buffer);
+	printf("[thread %lu] received from %s:%d: %s\n", tid, ipbuf, conn->client_fd, buffer);
 
-	// Simulate some work by sleeping for a short time
-	//usleep(100000); // Sleep for 100ms
-
-	char response[1024];
+	char response[1024 + 6];
 	snprintf(response, sizeof(response), "Echo: %s", buffer);
 	send(fd, response, strlen(response), 0);
 
 	connection_close(conn);
+}
+
+void connection_submit(worker_pool_t *pool, connection_t *conn) {
+	if (worker_pool_submit(pool, conn) < 0) {
+		connection_close(conn);
+	}
 }

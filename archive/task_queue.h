@@ -1,11 +1,12 @@
 #ifndef TASK_QUEUE_H
 #define TASK_QUEUE_H
 
-typedef void (*task_fn_t)(void*);
+typedef void (*task_fn_t)(void* args, thread_worker_t* worker);
 
 typedef struct {
     task_fn_t fn;
     void*     args;
+    thread_worker_t* worker; 
 } task_t;
 
 typedef struct {
