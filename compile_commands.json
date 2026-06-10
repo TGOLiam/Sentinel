@@ -1,0 +1,53 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-std=c11",
+      "-I./include",
+      "-c",
+      "-o",
+      "build/obj/listener.o",
+      "src/listener.c"
+    ],
+    "directory": "/home/liamb/Projects/ProjectSentinel",
+    "file": "/home/liamb/Projects/ProjectSentinel/src/listener.c",
+    "output": "/home/liamb/Projects/ProjectSentinel/build/obj/listener.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-std=c11",
+      "-I./include",
+      "-c",
+      "-o",
+      "build/obj/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/liamb/Projects/ProjectSentinel",
+    "file": "/home/liamb/Projects/ProjectSentinel/src/main.c",
+    "output": "/home/liamb/Projects/ProjectSentinel/build/obj/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-std=c11",
+      "-I./include",
+      "-c",
+      "-o",
+      "build/obj/worker_pool.o",
+      "src/worker_pool.c"
+    ],
+    "directory": "/home/liamb/Projects/ProjectSentinel",
+    "file": "/home/liamb/Projects/ProjectSentinel/src/worker_pool.c",
+    "output": "/home/liamb/Projects/ProjectSentinel/build/obj/worker_pool.o"
+  }
+]
